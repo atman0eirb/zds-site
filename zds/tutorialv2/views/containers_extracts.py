@@ -197,12 +197,14 @@ class CreateExtract(LoggedWithReadWriteHability, SingleContentFormViewMixin, For
     content = None
     authorized_for_staff = True
     quizz = False
+    sondage = False
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["container"] = search_container_or_404(self.versioned_object, self.kwargs)
         context["gallery"] = self.object.gallery
         context["quizz"] = self.quizz
+        context["sondage"] = self.sondage
         return context
 
     def render_to_response(self, context, **response_kwargs):
@@ -213,6 +215,7 @@ class CreateExtract(LoggedWithReadWriteHability, SingleContentFormViewMixin, For
 
         return super().render_to_response(context, **response_kwargs)
 
+    # a adapter pour les sondages
     def form_valid(self, form):
         parent = search_container_or_404(self.versioned_object, self.kwargs)
 

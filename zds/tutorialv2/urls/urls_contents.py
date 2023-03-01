@@ -131,6 +131,19 @@ urlpatterns = [
     path("nouveau-quizz/<int:pk>/<slug:slug>/", CreateExtract.as_view(quizz=True), name="create-quizz"),
     # edit:
     path(
+        "nouveau-sondage/<int:pk>/<slug:slug>/<slug:parent_container_slug>/<slug:container_slug>/",
+        CreateExtract.as_view(sondage=True),
+        name="create-sondage",
+    ),
+    path(
+        "nouveau-sondage/(<int:pk>/<slug:slug>/<slug:container_slug>/",
+        CreateExtract.as_view(sondage=True),
+        name="create-sondage",
+    ),
+    path("nouvelle-section/<int:pk>/<slug:slug>/", CreateExtract.as_view(), name="create-extract"),
+    path("nouveau-sondage/<int:pk>/<slug:slug>/", CreateExtract.as_view(sondage=True), name="create-sondage"),
+    # edit:
+    path(
         "editer-conteneur/<int:pk>/<slug:slug>/<slug:parent_container_slug>/" r"<slug:container_slug>/",
         EditContainer.as_view(),
         name="edit-container",
