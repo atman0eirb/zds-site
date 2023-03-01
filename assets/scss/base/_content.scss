@@ -664,6 +664,12 @@ li.task-list-item {
     &.quizz-bad {
         color: $color-danger;
     }
+    &.quizz-forget {
+        font-weight: bolder;
+    }
+    &.quizz-forget {
+            font-weight: bolder;
+    }
 }
 
 
