@@ -623,3 +623,19 @@ def mark_read(topic, user=None):
             current_topic_read.post = topic.last_message
         current_topic_read.save()
         signals.topic_read.send(sender=topic.__class__, instance=topic, user=user)
+
+
+# ---- sondage ----
+
+
+class SurveyQuestion(models.Model):
+    url = models.TextField(name="url", verbose_name="url", null=False, blank=False)
+    question = models.TextField(name="question", verbose_name="question", null=False, blank=False)
+
+
+class SurveyAvailableChoice(models.Model):
+    choice = models.TextField(name="choice", verbose_name="Choice", null=False, blank=False)
+    counter = models.PositiveIntegerField(name="counter", verbose_name="Counter", default=0)
+    related_question = models.ForeignKey(
+        SurveyQuestion, name="related_question", verbose_name="Related question", on_delete=models.CASCADE
+    )
