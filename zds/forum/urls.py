@@ -5,6 +5,7 @@ from zds.forum.views import (
     CategoriesForumsListView,
     ForumCategoryForumsDetailView,
     ForumTopicsListView,
+    ResultSurvey,
     TopicPostsListView,
     TopicNew,
     TopicEdit,
@@ -20,6 +21,7 @@ from zds.forum.views import (
     ManageGitHubIssue,
     LastTopicsListView,
     FindFollowedTopic,
+    ContentSurvey,
 )
 
 app_name = "forum"
@@ -59,4 +61,7 @@ urlpatterns = [
     path("<slug:cat_slug>/<slug:forum_slug>/", ForumTopicsListView.as_view(), name="topics-list"),
     # Forums belonging to one category
     path("<slug:slug>/", ForumCategoryForumsDetailView.as_view(), name="cat-forums-list"),
+    # Forum survey
+    path("survey/", ContentSurvey.as_view(), name="answer-survey"),
+    path("survey_Result/", ResultSurvey.as_view(), name="result-survey"),
 ]

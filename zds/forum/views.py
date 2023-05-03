@@ -1,6 +1,7 @@
 import json
-
+import uuid
 import requests
+
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required, permission_required
@@ -15,11 +16,21 @@ from django.utils.decorators import method_decorator
 from django.utils.translation import gettext_lazy as _
 from django.views.decorators.http import require_POST, require_GET
 from django.views.generic import ListView, DetailView, CreateView, UpdateView
+from django.views import View
 from django.views.generic.detail import SingleObjectMixin
 
 from zds.forum.commons import TopicEditMixin, PostEditMixin, SinglePostObjectMixin, ForumEditMixin
 from zds.forum.forms import TopicForm, PostForm, MoveTopicForm
-from zds.forum.models import ForumCategory, Forum, Topic, Post, mark_read, TopicRead
+from zds.forum.models import (
+    ForumCategory,
+    Forum,
+    SurveyAvailableChoice,
+    SurveyQuestion,
+    Topic,
+    Post,
+    mark_read,
+    TopicRead,
+)
 from zds.member.decorator import can_write_and_read_now
 from zds.member.models import user_readable_forums
 from zds.forum import signals
@@ -885,3 +896,82 @@ class ManageGitHubIssue(UpdateView):
                     messages.error(request, _("Un problème est survenu lors de l'envoi sur GitHub."))
 
         return redirect(self.object.get_absolute_url())
+
+
+class ContentSurvey(View):
+    def post(self, request):
+
+        # example of request.body
+
+        # json_data = """
+        # {
+        #     "survey": {
+        #         "ahaaa": [
+        #             "a",
+        #             "b",
+        #             "c",
+        #             "d"
+        #         ]
+
+        #     },
+        #     "result": [
+        #         "c"
+        #     ],
+        #     "url": "http://0.0.0.0:8000/tutoriels/11/stats/#1-double"
+        # }
+        # """
+
+        # Load the JSON data
+        data = json.loads(request.body)
+
+        survey_url = data["url"]
+        survey_title = next(iter(data["survey"]))
+        choices = data["survey"][survey_title]
+
+        # Try to get the existing question
+        question = SurveyQuestion.objects.filter(url=survey_url, question=survey_title)
+
+        if not question:
+            # If the question doesn't exist, create it
+            question = SurveyQuestion.objects.create(url=survey_url, question=survey_title)
+        # Loop over the choices in the JSON
+        for choice_text in choices:
+
+            # Try to get the existing choice
+            choice = SurveyAvailableChoice.objects.filter(related_question_id=question.id, choice=choice_text)
+
+            if not choice:
+                # If the choice doesn't exist, create it
+                choice = SurveyAvailableChoice.objects.create(related_question_id=question.id, choice=choice_text)
+
+            # If the choice is in the result labels, increment its counter
+            if choice_text in data["result"][0]:
+                choice.counter += 1
+                choice.save()
+
+        return StreamingHttpResponse(json.dumps({"status": "ok"}))
+
+
+class ResultSurvey(View):
+    def get(self, request):
+
+        data = json.loads(request.body)
+
+        survey_url = data["url"]
+        survey_title = data["survey"]
+
+        survey_question = SurveyQuestion.objects.get(url=survey_url, question=survey_title)
+
+        # get all available choices for the survey question and annotate with their counter sum
+        choices = SurveyAvailableChoice.objects.filter(related_question_id=survey_question.id).values(
+            "choice", "counter"
+        )
+
+        choice_data = {}
+        total = 0
+        for choice in choices:
+            choice_data[choice["choice"]] = choice["counter"]
+            total += choice["counter"]
+
+        # Return the list of choices and the total number of responses as JSON
+        return StreamingHttpResponse({"choices": choices, "total": total})
