@@ -93,7 +93,7 @@ if (currentURL.includes("forums")) {
     xhttp.setRequestHeader('X-CSRFToken', csrfmiddlewaretoken)
     xhttp.send(JSON.stringify(data))
   }
-  function DataExtract(div){
+  function DataExtract(div) {
 
     // Create the JSON object
     const data = {};
@@ -123,7 +123,7 @@ if (currentURL.includes("forums")) {
     submit.addEventListener('click', () => {
 
       const checkedInput = div.querySelector('input:checked');
-      
+
       if (checkedInput) {
         data["result"] = [checkedInput.parentElement.innerText]
         sendSurvey(data);
