@@ -917,7 +917,8 @@ class ContentSurvey(View):
         #     "result": [
         #         "c"
         #     ],
-        #     "url": "http://0.0.0.0:8000/tutoriels/11/stats/#1-double"
+        #     "url": "url"
+        #     "owner" : "user"
         # }
         # """
 
@@ -927,13 +928,14 @@ class ContentSurvey(View):
         survey_url = data["url"]
         survey_title = next(iter(data["survey"]))
         choices = data["survey"][survey_title]
+        owner = data["owner"]
 
         # Try to get the existing question
-        question = SurveyQuestion.objects.filter(url=survey_url, question=survey_title)
+        question = SurveyQuestion.objects.filter(url=survey_url, question=survey_title, owner=owner)
 
         if not question:
             # If the question doesn't exist, create it
-            question = SurveyQuestion.objects.create(url=survey_url, question=survey_title)
+            question = SurveyQuestion.objects.create(url=survey_url, question=survey_title, owner=owner)
         # Loop over the choices in the JSON
         for choice_text in choices:
 
@@ -959,8 +961,9 @@ class ResultSurvey(View):
 
         survey_url = data["url"]
         survey_title = data["survey"]
+        owner = data["owner"]
 
-        survey_question = SurveyQuestion.objects.get(url=survey_url, question=survey_title)
+        survey_question = SurveyQuestion.objects.get(url=survey_url, question=survey_title, owner=owner)
 
         # get all available choices for the survey question and annotate with their counter sum
         choices = SurveyAvailableChoice.objects.filter(related_question_id=survey_question.id).values(
