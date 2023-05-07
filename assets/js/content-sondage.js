@@ -48,18 +48,8 @@ if (currentURL.includes("forums")) {
     })
   }
 
-
-  function initializeRadio() {
-    const radio = document.querySelectorAll('.custom-block-quizz input');
-    Makesurvey(radio)
-
-  }
-
-  const initializePipeline = [initializeRadio]
-
-  let idCounter = 0
-
   function SurveyButtons(survey) {
+
 
     const submit = document.createElement('button')
     submit.innerText = 'Voter'
@@ -71,52 +61,76 @@ if (currentURL.includes("forums")) {
     notAnswered.classList.add('notAnswered')
 
     survey.appendChild(submit)
-    survey.appendChild(notAnswered)
+    survey.parentElement.parentElement.parentElement.appendChild(notAnswered)
 
   }
 
+  function initializeRadio() {
+    const radio = document.querySelectorAll('.custom-block-quizz input');
+    Makesurvey(radio)
+    document.querySelectorAll('div.custom-block-quizz').forEach(div => {
+      SurveyButtons(div)
+    })
 
+  }
 
+  const initializePipeline = [initializeRadio]
+
+  let idCounter = 0
 
   initializePipeline.forEach(func => func())
 
-  document.querySelectorAll('div.custom-block-quizz').forEach(div => {
-    SurveyButtons(div)
-  })
-
-
 
   // not complet , a test example only
-  function sendSurvey() {
+  function sendSurvey(data) {
+
     const csrfmiddlewaretoken = document.querySelector('input[name=\'csrfmiddlewaretoken\']').value
     const xhttp = new XMLHttpRequest()
     const url = '/forums/survey/'
-    const data = {
-      "survey": {
-        "ahaaa": [
-          "a",
-          "b",
-          "c",
-          "d"
-        ]
-
-      },
-      "result": [
-        "c"
-      ],
-      "url": "http://0.0.0.0:8000/tutoriels/11/stats/#1-double"
-    }
     xhttp.open('POST', url)
     xhttp.setRequestHeader('X-Requested-With', 'XMLHttpRequest')
     xhttp.setRequestHeader('Content-Type', 'application/json')
     xhttp.setRequestHeader('X-CSRFToken', csrfmiddlewaretoken)
     xhttp.send(JSON.stringify(data))
   }
+  function DataExtract(div){
 
+    // Create the JSON object
+    const data = {};
+
+    const title = div.querySelector('.custom-block-heading').innerText
+    // Get the radio button options
+    const options = div.querySelectorAll('input[type="radio"]');
+    // Extract the text content of the options
+    const choices = [];
+    options.forEach(option => {
+      choices.push(option.parentNode.textContent.trim());
+    });
+
+    const message = div.parentElement.parentElement.parentElement
+    const SurveyOwner = message.querySelector('.username').innerText;
+    const Surveyurl = message.querySelector('.date').href
+
+    data[title] = choices
+    data["url"] = Surveyurl
+    data["owner"] = SurveyOwner
+
+    return data
+  }
   document.querySelectorAll('div.custom-block-quizz').forEach(div => {
     const submit = div.querySelector('.btn-submit')
+    let data = DataExtract(div)
     submit.addEventListener('click', () => {
-      sendSurvey()
+
+      const checkedInput = div.querySelector('input:checked');
+      
+      if (checkedInput) {
+        data["result"] = [checkedInput.parentElement.innerText]
+        sendSurvey(data);
+      }
+      else {
+        div.parentElement.parentElement.parentElement.querySelector('.notAnswered').innerText = " Veuillez choisir d'abord "
+      }
 
     })
   })

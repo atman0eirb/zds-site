@@ -631,6 +631,7 @@ def mark_read(topic, user=None):
 class SurveyQuestion(models.Model):
     url = models.TextField(name="url", verbose_name="url", null=False, blank=False)
     question = models.TextField(name="question", verbose_name="question", null=False, blank=False)
+    owner = models.TextField(name="owner", verbose_name="owner", null=False, blank=False)
 
 
 class SurveyAvailableChoice(models.Model):
