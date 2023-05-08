@@ -84,6 +84,7 @@ if (currentURL.includes("forums")) {
   // not complet , a test example only
   function sendSurvey(data) {
 
+    console.log(JSON.stringify(data));
     const csrfmiddlewaretoken = document.querySelector('input[name=\'csrfmiddlewaretoken\']').value
     const xhttp = new XMLHttpRequest()
     const url = '/forums/survey/'
@@ -91,6 +92,7 @@ if (currentURL.includes("forums")) {
     xhttp.setRequestHeader('X-Requested-With', 'XMLHttpRequest')
     xhttp.setRequestHeader('Content-Type', 'application/json')
     xhttp.setRequestHeader('X-CSRFToken', csrfmiddlewaretoken)
+
     xhttp.send(JSON.stringify(data))
   }
   function DataExtract(div) {
@@ -111,7 +113,9 @@ if (currentURL.includes("forums")) {
     const SurveyOwner = message.querySelector('.username').innerText;
     const Surveyurl = message.querySelector('.date').href
 
-    data[title] = choices
+    const survey = {}
+    survey[title] = choices
+    data["survey"] = survey
     data["url"] = Surveyurl
     data["owner"] = SurveyOwner
 
