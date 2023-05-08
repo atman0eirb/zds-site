@@ -1,5 +1,4 @@
 import json
-import uuid
 import requests
 
 from django.conf import settings
@@ -955,7 +954,7 @@ class ContentSurvey(View):
 
 
 class ResultSurvey(View):
-    def get(self, request):
+    def post(self, request):
 
         data = json.loads(request.body)
 
@@ -977,4 +976,30 @@ class ResultSurvey(View):
             total += choice["counter"]
 
         # Return the list of choices and the total number of responses as JSON
-        return StreamingHttpResponse({"choices": choices, "total": total})
+        response_data = {"choices": choice_data, "total": total}
+        json_data = json.dumps(response_data)
+
+        # example with last survey
+        # {
+        # "choices": [
+        #     {
+        #         "choice": "a",
+        #         "counter": 0
+        #     },
+        #     {
+        #         "choice": "b",
+        #         "counter": 0
+        #     },
+        #     {
+        #         "choice": "c",
+        #         "counter": 1
+        #     },
+        #     {
+        #         "choice": "d",
+        #         "counter": 0
+        #     }
+        # ],
+        # "total": 1
+        # }
+
+        return HttpResponse(json_data, content_type="application/json")

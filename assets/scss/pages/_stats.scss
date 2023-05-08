@@ -140,3 +140,45 @@
     display: none;
   }
 }
+
+.notAnswered-sondage {
+  margin-top: -4rem;
+  padding: 1rem;
+  margin-right: 58rem;
+  margin-left: 1rem;
+
+  border: 1px solid #f5c6cb; /* dark red */
+  color: #f72f0c; /* dark text */
+  border-radius: 0.25rem;
+  font-size: 1.2rem;
+  line-height: 1.5;
+  &:empty {
+    display: none;
+  }
+}
+
+
+li.task-list-item.sondage {
+  position: relative; /* make the li element a positioned container */
+}
+
+li.task-list-item.sondage input[type="checkbox"] {
+  position: absolute; /* position the checkbox */
+  top: 50%; /* move it halfway down the li element */
+  right: 0; /* position it to the right of the li element */
+  transform: translateY(-50%); /* center it vertically */
+}
+
+li.task-list-item.sondage label {
+  display: inline-block; /* display the label inline with the checkbox */
+  margin-right: 30px; /* add some spacing between the checkbox and label */
+}
+
+
+li.task-list-item.sondage progress {
+  margin-right: 10px;
+}
+
+li.task-list-item.sondage .progress-text {
+  font-size: 0.8em;
+}

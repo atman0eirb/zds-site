@@ -17,7 +17,6 @@
 
  */
 
-
 var currentURL = window.location.href;
 
 if (currentURL.includes("forums")) {
@@ -25,7 +24,7 @@ if (currentURL.includes("forums")) {
   let indeX = 0;
   function Makesurvey(inputDomElementList) {
 
-
+    let idli = 0
     inputDomElementList.forEach((rb) => {
 
 
@@ -34,17 +33,34 @@ if (currentURL.includes("forums")) {
       if (!ulWrapperElement.getAttribute('id')) {
         ulWrapperElement.setAttribute('id', 'id-' + (indeX++))
       }
-
+      rb.parentElement.classList.add('sondage');
+      // rb.parentElement.classList.remove('task-list-item');
       rb.setAttribute('name', ulWrapperElement.getAttribute('id'))
-      rb.setAttribute('type', 'radio')
+      rb.setAttribute('id', ulWrapperElement.getAttribute('id') + '-' + idli)
+      idli++
+      rb.setAttribute('type', 'checkbox')
+      rb.disabled = false
 
       const questionBlock = ulWrapperElement.parentElement.parentElement
       questionBlock.setAttribute('data-name', rb.getAttribute('name'))
 
 
-      rb.disabled = false
-      rb.checked = false
+    })
+  }
+// add labels to li elements
+  function AnswersAsLabels() {
 
+    var checkboxli = document.querySelectorAll('.custom-block-quizz ul li')
+
+    checkboxli.forEach((li) => {
+      var input = li.querySelector('input[type=checkbox]')
+      var label = document.createElement('label')
+      label.setAttribute('for', input.getAttribute('id'))
+      label.classList.add('answer-label')
+      label.innerHTML = li.querySelector('span.math') ? li.querySelector('span.math').innerHTML : li.innerText
+      li.textContent = ''
+      li.appendChild(input)
+      li.appendChild(label)
     })
   }
 
@@ -58,33 +74,32 @@ if (currentURL.includes("forums")) {
     submit.setAttribute('id', `my-button-${idCounter}`);
 
     const notAnswered = document.createElement('p')
-    notAnswered.classList.add('notAnswered')
+    notAnswered.classList.add('notAnswered-sondage')
 
     survey.appendChild(submit)
     survey.parentElement.parentElement.parentElement.appendChild(notAnswered)
 
   }
 
-  function initializeRadio() {
+  function initializeSurvey() {
     const radio = document.querySelectorAll('.custom-block-quizz input');
     Makesurvey(radio)
     document.querySelectorAll('div.custom-block-quizz').forEach(div => {
       SurveyButtons(div)
     })
+    AnswersAsLabels()
 
   }
 
-  const initializePipeline = [initializeRadio]
+  const initializePipeline = [initializeSurvey]
 
   let idCounter = 0
 
   initializePipeline.forEach(func => func())
 
-
-  // not complet , a test example only
+// send response to server
   function sendSurvey(data) {
 
-    console.log(JSON.stringify(data));
     const csrfmiddlewaretoken = document.querySelector('input[name=\'csrfmiddlewaretoken\']').value
     const xhttp = new XMLHttpRequest()
     const url = '/forums/survey/'
@@ -92,17 +107,104 @@ if (currentURL.includes("forums")) {
     xhttp.setRequestHeader('X-Requested-With', 'XMLHttpRequest')
     xhttp.setRequestHeader('Content-Type', 'application/json')
     xhttp.setRequestHeader('X-CSRFToken', csrfmiddlewaretoken)
-
     xhttp.send(JSON.stringify(data))
   }
+
+  // Get statistics from DB and display it
+  function GetSurveyStats(data, div) {
+
+    const newData = {
+      "survey": data.survey,
+      "url": data.url,
+      "owner": data.owner
+    };
+    const csrfmiddlewaretoken = document.querySelector('input[name=\'csrfmiddlewaretoken\']').value
+    const xhttp = new XMLHttpRequest()
+    xhr.addEventListener('readystatechange', function () {
+      if (xhr.readyState === 4 && xhr.status === 200) {
+        const response_data = JSON.parse(xhttp.responseText);
+
+        // Loop through each list item
+        div.querySelectorAll("li").forEach((li) => {
+          // Get the label element and its text content
+          const label = li.querySelector("label");
+          const labelText = label.textContent;
+          // Get the result data for the current label text
+          const resultData = response_data.choices.find((choice) => choice.choice === labelText);
+          // If result data exists, create a progress element and append it to the label
+          if (resultData) {
+            const progress = document.createElement("progress");
+            progress.value = resultData.counter;
+            progress.max = response_data.total;
+            const percentage = Math.round((resultData.counter / data.total) * 100);
+            const textNode = document.createTextNode(` ${resultData.counter}/${data.total} (${percentage}%)`);
+            label.after(progress, textNode);
+          }
+        });
+      }
+    });
+    xhr.open('POST', '/survey_Result/');
+    xhttp.setRequestHeader('X-Requested-With', 'XMLHttpRequest')
+    xhttp.setRequestHeader('Content-Type', 'application/json')
+    xhttp.setRequestHeader('X-CSRFToken', csrfmiddlewaretoken)
+    xhttp.send(JSON.stringify(newData))
+
+
+  }
+
+
+  function FakeGetSurveyStats(div) {
+
+    // change elements to fitt with you survey for test
+    data = {
+      "choices": [
+        {
+          "choice": "YES",
+          "counter": 5
+        },
+        {
+          "choice": "NO",
+          "counter": 4
+        },
+        {
+          "choice": "May be",
+          "counter": 9
+        },
+        {
+          "choice": "I don’t want",
+          "counter": 2
+        }
+      ],
+      "total": 20
+    }
+
+    // Loop through each list item
+    div.querySelectorAll("li").forEach((li) => {
+      // Get the label element and its text content
+      const label = li.querySelector("label");
+      const labelText = label.textContent;
+      // Get the result data for the current label text
+      const resultData = data.choices.find((choice) => choice.choice === labelText);
+      // If result data exists, create a progress element and append it to the label
+      if (resultData) {
+        const progress = document.createElement("progress");
+        progress.value = resultData.counter;
+        progress.max = data.total;
+        const percentage = Math.round((resultData.counter / data.total) * 100);
+        const textNode = document.createTextNode(` ${resultData.counter}/${data.total} (${percentage}%)`);
+        label.after(progress, textNode);
+      }
+    });
+
+  }
+
   function DataExtract(div) {
 
     // Create the JSON object
     const data = {};
 
     const title = div.querySelector('.custom-block-heading').innerText
-    // Get the radio button options
-    const options = div.querySelectorAll('input[type="radio"]');
+    const options = div.querySelectorAll('input[type="checkbox"]');
     // Extract the text content of the options
     const choices = [];
     options.forEach(option => {
@@ -130,10 +232,14 @@ if (currentURL.includes("forums")) {
 
       if (checkedInput) {
         data["result"] = [checkedInput.parentElement.innerText]
-        sendSurvey(data);
+        div.parentElement.parentElement.parentElement.querySelector('.notAnswered-sondage').innerText = ''
+        div.querySelector('.btn-submit').disabled = true
+        // sendSurvey(data);
+        // GetSurveyStats(data,div)
+        FakeGetSurveyStats(div)
       }
       else {
-        div.parentElement.parentElement.parentElement.querySelector('.notAnswered').innerText = " Veuillez choisir d'abord "
+        div.parentElement.parentElement.parentElement.querySelector('.notAnswered-sondage').innerText = " Veuillez choisir une réponse d'abord "
       }
 
     })
