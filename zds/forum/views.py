@@ -935,20 +935,52 @@ class ContentSurvey(View):
         if not question:
             # If the question doesn't exist, create it
             question = SurveyQuestion.objects.create(url=survey_url, question=survey_title, owner=owner)
-        # Loop over the choices in the JSON
-        for choice_text in choices:
-
-            # Try to get the existing choice
-            choice = SurveyAvailableChoice.objects.filter(related_question_id=question.id, choice=choice_text)
-
-            if not choice:
+            # Loop over the choices in the JSON
+            for choice_text in choices:
                 # If the choice doesn't exist, create it
                 choice = SurveyAvailableChoice.objects.create(related_question_id=question.id, choice=choice_text)
 
-            # If the choice is in the result labels, increment its counter
-            if choice_text in data["result"][0]:
-                choice.counter += 1
-                choice.save()
+        else:
+
+            # get all available choices for the survey question and annotate with their counter sum
+            choicesDB = SurveyAvailableChoice.objects.filter(related_question_id=question.id).values("choice")
+            choices_list = [choice["choice"] for choice in choicesDB]
+
+            if choices_list == choices:
+
+                # Loop over the choices in the JSON
+                for choice_text in choices:
+
+                    # Try to get the existing choice
+                    choice = SurveyAvailableChoice.objects.filter(related_question_id=question.id, choice=choice_text)
+                    # If the choice is in the result labels, increment its counter
+                    if choice_text in data["result"][0]:
+                        choice.counter += 1
+                        choice.save()
+            else:
+                if survey_url == question.url:
+
+                    for choice_text in choices:
+
+                        # Try to get the existing choice
+                        choice = SurveyAvailableChoice.objects.filter(
+                            related_question_id=question.id, choice=choice_text
+                        )
+
+                        if not choice:
+                            # If the choice doesn't exist, create it
+                            choice = SurveyAvailableChoice.objects.create(
+                                related_question_id=question.id, choice=choice_text
+                            )
+
+                        # If choice in Db not in current suvey
+                        if choice not in choices:
+                            choice.delete()
+
+                        # If the choice is in the result labels, increment its counter
+                        if choice_text in data["result"][0]:
+                            choice.counter += 1
+                            choice.save()
 
         return StreamingHttpResponse(json.dumps({"status": "ok"}))
 
