@@ -632,7 +632,6 @@ class SurveyQuestion(models.Model):
     url = models.TextField(name="url", verbose_name="url", null=False, blank=False)
     question = models.TextField(name="question", verbose_name="question", null=False, blank=False)
     owner = models.TextField(name="owner", verbose_name="owner", null=False, blank=False)
-    date_answer = models.DateField(name="date_answer", verbose_name="Date of answer", null=False, auto_now=True)
 
 
 class SurveyAvailableChoice(models.Model):
