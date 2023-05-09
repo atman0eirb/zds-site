@@ -40,6 +40,7 @@ if (currentURL.includes("forums")) {
       idli++
       rb.setAttribute('type', 'checkbox')
       rb.disabled = false
+      rb.checked = false
 
       const questionBlock = ulWrapperElement.parentElement.parentElement
       questionBlock.setAttribute('data-name', rb.getAttribute('name'))
@@ -47,7 +48,7 @@ if (currentURL.includes("forums")) {
 
     })
   }
-// add labels to li elements
+  // add labels to li elements
   function AnswersAsLabels() {
 
     var checkboxli = document.querySelectorAll('.custom-block-quizz ul li')
@@ -71,7 +72,10 @@ if (currentURL.includes("forums")) {
     submit.innerText = 'Voter'
 
     submit.classList.add('btn', 'btn-submit')
-    submit.setAttribute('id', `my-button-${idCounter}`);
+    
+    const message = survey.parentElement.parentElement.parentElement
+    const Surveyurl = message.querySelector('.date').href
+    submit.setAttribute('id', `my-button-${Surveyurl}`);
 
     const notAnswered = document.createElement('p')
     notAnswered.classList.add('notAnswered-sondage')
@@ -93,20 +97,20 @@ if (currentURL.includes("forums")) {
 
   const initializePipeline = [initializeSurvey]
 
-  let idCounter = 0
+
 
   initializePipeline.forEach(func => func())
 
-// send response to server
+  // send response to server
   function sendSurvey(data) {
 
-    const csrfmiddlewaretoken = document.querySelector('input[name=\'csrfmiddlewaretoken\']').value
+
     const xhttp = new XMLHttpRequest()
     const url = '/forums/survey/'
     xhttp.open('POST', url)
     xhttp.setRequestHeader('X-Requested-With', 'XMLHttpRequest')
     xhttp.setRequestHeader('Content-Type', 'application/json')
-    xhttp.setRequestHeader('X-CSRFToken', csrfmiddlewaretoken)
+    // xhttp.setRequestHeader('X-CSRFToken', csrfmiddlewaretoken)
     xhttp.send(JSON.stringify(data))
   }
 
@@ -118,7 +122,7 @@ if (currentURL.includes("forums")) {
       "url": data.url,
       "owner": data.owner
     };
-    const csrfmiddlewaretoken = document.querySelector('input[name=\'csrfmiddlewaretoken\']').value
+
     const xhttp = new XMLHttpRequest()
     xhr.addEventListener('readystatechange', function () {
       if (xhr.readyState === 4 && xhr.status === 200) {
@@ -146,7 +150,7 @@ if (currentURL.includes("forums")) {
     xhr.open('POST', '/survey_Result/');
     xhttp.setRequestHeader('X-Requested-With', 'XMLHttpRequest')
     xhttp.setRequestHeader('Content-Type', 'application/json')
-    xhttp.setRequestHeader('X-CSRFToken', csrfmiddlewaretoken)
+    // xhttp.setRequestHeader('X-CSRFToken', csrfmiddlewaretoken)
     xhttp.send(JSON.stringify(newData))
 
 
@@ -226,20 +230,36 @@ if (currentURL.includes("forums")) {
   document.querySelectorAll('div.custom-block-quizz').forEach(div => {
     const submit = div.querySelector('.btn-submit')
     let data = DataExtract(div)
+    const notAnsweredElm = div.parentElement.parentElement.parentElement.querySelector('.notAnswered-sondage')
     submit.addEventListener('click', () => {
 
-      const checkedInput = div.querySelector('input:checked');
+      if (!sessionStorage.getItem(submit.id)) {
+        // If the quiz has not been submitted before, store a flag in session storage to prevent multiple submissions
+        sessionStorage.setItem(`${submit.id}`, true);
 
-      if (checkedInput) {
-        data["result"] = [checkedInput.parentElement.innerText]
-        div.parentElement.parentElement.parentElement.querySelector('.notAnswered-sondage').innerText = ''
-        div.querySelector('.btn-submit').disabled = true
-        // sendSurvey(data);
-        // GetSurveyStats(data,div)
-        FakeGetSurveyStats(div)
-      }
-      else {
-        div.parentElement.parentElement.parentElement.querySelector('.notAnswered-sondage').innerText = " Veuillez choisir une réponse d'abord "
+        const checkedInputs = div.querySelectorAll('input:checked');
+
+        const length = checkedInputs.length
+
+        if (length>1) {
+          notAnsweredElm.innerText = " Veuillez choisir une seule réponse"
+        }
+        else if(length===1){
+          data["result"] = [checkedInputs[0].parentElement.innerText]
+          notAnsweredElm.innerText = ''
+          submit.disabled = true
+          // sendSurvey(data);
+          // GetSurveyStats(data,div)
+          FakeGetSurveyStats(div)
+        }
+        else {
+          notAnsweredElm.innerText = " Veuillez choisir une réponse d'abord "
+        }
+      } else {
+        // If the quiz has already been submitted, disable the submit button
+        submit.setAttribute('disabled', true);
+        notAnsweredElm.innerText = " Vous avez déjà répondu "
+        return;
       }
 
     })
