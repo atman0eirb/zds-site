@@ -72,7 +72,7 @@ if (currentURL.includes("forums")) {
     submit.innerText = 'Voter'
 
     submit.classList.add('btn', 'btn-submit')
-    
+
     const message = survey.parentElement.parentElement.parentElement
     const Surveyurl = message.querySelector('.date').href
     submit.setAttribute('id', `my-button-${Surveyurl}`);
@@ -241,10 +241,10 @@ if (currentURL.includes("forums")) {
 
         const length = checkedInputs.length
 
-        if (length>1) {
+        if (length > 1) {
           notAnsweredElm.innerText = " Veuillez choisir une seule réponse"
         }
-        else if(length===1){
+        else if (length === 1) {
           data["result"] = [checkedInputs[0].parentElement.innerText]
           notAnsweredElm.innerText = ''
           submit.disabled = true
